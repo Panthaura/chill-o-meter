@@ -1,0 +1,70 @@
+{
+  "name": "chill-o-meter",
+  "version": "0.0.1",
+  "description": "Offline Desktop Stress Management App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win --dir",
+    "build:nsis": "electron-builder --win nsis",
+    "build:portable": "electron-builder --win portable --config.win.target=portable",
+    "test": "node tests/test.js"
+  },
+  "keywords": [
+    "stress",
+    "wellness",
+    "electron",
+    "offline"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.chill-o-meter.app",
+    "productName": "Chill-O-Meter",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "signingHashAlgorithms": [],
+      "signAndEditExecutable": false
+    },
+    "electronDownload": {
+      "mirror": "https://github.com/electron/electron/releases/download/"
+    },
+    "publish": null,
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Chill-O-Meter",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*.{md,markdown,txt}",
+      "!generate-icon.js",
+      "!dist/**",
+      "!.git/**"
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    }
+  }
+}

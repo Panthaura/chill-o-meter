@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; media-src 'self' data:">
+  <title>Chill-O-Meter</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="ambient-orb" id="ambient-orb"></div>
+  <div class="toast-container" id="toast-container"></div>
+  <div class="window-topbar">
+    <div class="window-drag-region"></div>
+    <button class="window-close-btn" id="btn-window-close" title="Schließen">&#10005;</button>
+  </div>
+
+  <div class="close-modal-overlay" id="close-modal-overlay" style="display:none;">
+    <div class="close-modal">
+      <h2>App schließen?</h2>
+      <p>Was möchtest du tun?</p>
+      <label class="close-modal-remember">
+        <input type="checkbox" id="close-modal-remember">
+        <span>Auswahl für zukünftig merken</span>
+      </label>
+      <div class="close-modal-actions">
+        <button class="btn btn-secondary" id="btn-close-to-tray">In den Tray minimieren</button>
+        <button class="btn btn-primary" id="btn-close-and-quit">Komplett schließen</button>
+        <button class="btn btn-ghost" id="btn-close-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="privacy-modal-overlay" id="privacy-modal-overlay" style="display:none;">
+    <div class="privacy-modal">
+      <h2>Datenschutzhinweis</h2>
+      <p>
+        Zur Nutzung der App werden deine Eingaben und Einstellungen lokal auf deinem Geraet gespeichert
+        (z. B. Stresswerte, Uebungsverlauf und App-Einstellungen). Die Daten werden nur fuer die
+        App-Funktion verwendet und nicht an Dritte uebermittelt.
+      </p>
+      <div class="privacy-modal-actions">
+        <button class="btn btn-secondary" id="btn-privacy-decline">Ablehnen und App beenden</button>
+        <button class="btn btn-primary" id="btn-privacy-accept">Zustimmen und fortfahren</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ambient-sound-toggle" id="btn-ambient-sound" title="Hintergrundgeräusch">
+    🔇
+  </div>
+
+  <div class="tray-help-banner" id="tray-help-banner" style="display:none;">
+    <div class="tray-help-content">
+      <span class="tray-help-icon">&#9888;</span>
+      <span class="tray-help-text">System-Tray nicht sichtbar — <strong>Fenster anzeigen</strong> im Tray-Menü verwenden</span>
+      <button class="tray-help-dismiss" id="btn-tray-help-dismiss">&#10005;</button>
+    </div>
+    <div class="tray-help-install">
+      <a href="https://extensions.gnome.org/extension/615/appindicator-support/" target="_blank" rel="noopener">AppIndicator-Erweiterung installieren &rarr;</a>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Stress Check View -->
+    <section class="view active" id="view-stress">
+      <div class="glass-card centered">
+        <h1 class="view-title view-title-static">Wie geht es dir?</h1>
+        <p class="view-subtitle">Bewerte deinen aktuellen Stresslevel</p>
+
+        <div class="stress-scale" id="stress-scale">
+          <div class="scale-labels">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+          <div class="scale-track" id="scale-track">
+            <div class="scale-fill" id="scale-fill"></div>
+            <div class="scale-thumb" id="scale-thumb"></div>
+          </div>
+          <div class="scale-values">
+            <span class="scale-value">1</span>
+            <span class="scale-value">2</span>
+            <span class="scale-value">3</span>
+            <span class="scale-value">4</span>
+            <span class="scale-value">5</span>
+            <span class="scale-value">6</span>
+            <span class="scale-value">7</span>
+            <span class="scale-value">8</span>
+            <span class="scale-value">9</span>
+            <span class="scale-value">10</span>
+          </div>
+          <div class="scale-descriptions">
+            <span class="scale-desc">Sehr niedrig</span>
+            <span class="scale-desc">Niedrig</span>
+            <span class="scale-desc">Ruhig</span>
+            <span class="scale-desc">Leicht gestresst</span>
+            <span class="scale-desc">Mittel</span>
+            <span class="scale-desc">Etwas hoch</span>
+            <span class="scale-desc">Hoch</span>
+            <span class="scale-desc">Sehr hoch</span>
+            <span class="scale-desc">Extrem</span>
+            <span class="scale-desc">Maximal</span>
+          </div>
+        </div>
+
+        <div class="stress-display" id="stress-display">
+          <div class="stress-ring" id="stress-ring">
+            <svg viewBox="0 0 120 120" class="stress-ring-svg">
+              <circle cx="60" cy="60" r="52" class="stress-ring-bg"></circle>
+              <circle cx="60" cy="60" r="52" class="stress-ring-progress" id="stress-ring-progress"></circle>
+            </svg>
+            <span class="stress-number" id="stress-number">?</span>
+          </div>
+          <span class="stress-label" id="stress-label">Wähle einen Wert</span>
+        </div>
+
+        <div class="stress-comparison" id="stress-comparison" style="display:none;"></div>
+
+        <button class="btn btn-primary btn-large" id="btn-submit-stress">
+          Bestätigen
+        </button>
+
+        <div class="focus-section">
+          <div class="focus-divider"></div>
+          <p class="focus-text">Möchtest du jetzt in den <strong>Fokus-Modus</strong>?</p>
+          <button class="btn btn-focus" id="btn-focus-mode">
+            <span class="focus-icon">◉</span> Fokus-Modus starten
+          </button>
+        </div>
+
+        <div class="quick-nav">
+          <button class="btn btn-secondary nav-btn" id="btn-open-dashboard">
+            <span class="nav-icon">◫</span> Dashboard
+          </button>
+          <button class="btn btn-ghost nav-btn" id="btn-open-settings">
+            <span class="nav-icon">◌</span> Einstellungen
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Focus Mode View -->
+    <section class="view" id="view-focus">
+      <div class="glass-card centered">
+        <h1 class="view-title">Fokus-Modus</h1>
+        <p class="view-subtitle">Wähle die Dauer</p>
+
+        <div class="focus-duration-grid">
+          <button class="duration-btn" data-minutes="30">30 Min</button>
+          <button class="duration-btn" data-minutes="60">60 Min</button>
+          <button class="duration-btn" data-minutes="90">90 Min</button>
+          <button class="duration-btn" data-minutes="120">120 Min</button>
+        </div>
+
+        <div class="focus-timer" id="focus-timer" style="display:none;">
+          <svg class="timer-gradient-defs" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00d4aa" />
+                <stop offset="100%" style="stop-color:#00b894" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="focus-timer-circle" id="focus-timer-circle">
+            <svg viewBox="0 0 200 200" class="timer-svg">
+              <circle cx="100" cy="100" r="90" class="timer-bg"></circle>
+              <circle cx="100" cy="100" r="90" class="timer-progress" id="timer-progress"></circle>
+            </svg>
+            <div class="timer-text" id="timer-text">00:00</div>
+          </div>
+          <p class="focus-status">Fokus-Modus aktiv - Ablenkungen werden unterdrückt</p>
+          <button class="btn btn-secondary" id="btn-end-focus">Fokus beenden</button>
+        </div>
+
+        <button class="btn btn-ghost" id="btn-back-focus">Zurück</button>
+      </div>
+    </section>
+
+    <!-- Interventions View -->
+    <section class="view" id="view-interventions">
+      <div class="glass-card centered">
+        <h1 class="view-title">Interventionen</h1>
+        <p class="view-subtitle">Dein Stress ist hoch. Wähle eine Übung:</p>
+
+        <div class="intervention-grid" id="intervention-grid">
+          <button class="intervention-card" data-type="physiological-sigh">
+            <span class="intervention-icon">◍</span>
+            <span class="intervention-name">Physiologischer Seufzer</span>
+            <span class="intervention-desc">2x einatmen, 6s ausatmen</span>
+          </button>
+          <button class="intervention-card" data-type="box-breathing">
+            <span class="intervention-icon">◻</span>
+            <span class="intervention-name">Box-Breathing</span>
+            <span class="intervention-desc">4-4-4-4 Atemtechnik</span>
+          </button>
+          <button class="intervention-card" data-type="5-4-3-2-1">
+            <span class="intervention-icon">◉</span>
+            <span class="intervention-name">5-4-3-2-1 Grounding</span>
+            <span class="intervention-desc">Sinneswahrnehmungen bewusst machen</span>
+          </button>
+          <button class="intervention-card" data-type="pme">
+            <span class="intervention-icon">◐</span>
+            <span class="intervention-name">Progressive Muskelentspannung</span>
+            <span class="intervention-desc">Muskeln an- und entspannen</span>
+          </button>
+        </div>
+
+        <div class="intervention-actions">
+          <button class="btn btn-secondary" id="btn-random-intervention">
+            <span class="nav-icon">◎</span> Zufällig
+          </button>
+          <button class="btn btn-ghost" id="btn-custom-timers">
+            <span class="nav-icon">◴</span> Eigene Box-Timer
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Exercise View -->
+    <section class="view" id="view-exercise">
+      <div class="glass-card centered">
+        <h1 class="view-title" id="exercise-title">Übung</h1>
+        <p class="view-subtitle" id="exercise-desc"></p>
+        <div class="exercise-step-meta">
+          <span class="exercise-phase-chip" id="exercise-phase-chip">Bereit</span>
+          <span class="exercise-phase-time" id="exercise-phase-time">--</span>
+        </div>
+
+        <div class="exercise-container" id="exercise-container">
+          <!-- Box Breathing -->
+          <div class="exercise-content" id="exercise-box" style="display:none;">
+            <div class="box-breathing-visual" id="box-breathing-visual">
+              <div class="box-ring" id="box-ring"></div>
+              <div class="box-center" id="box-center">
+                <span class="breathing-phase-label" id="breathing-label">Einatmen</span>
+                <span class="breathing-timer-label" id="breathing-timer">4</span>
+              </div>
+            </div>
+            <div class="box-phase-dots" id="box-phase-dots">
+              <span class="phase-dot" data-phase="0"></span>
+              <span class="phase-dot" data-phase="1"></span>
+              <span class="phase-dot" data-phase="2"></span>
+              <span class="phase-dot" data-phase="3"></span>
+            </div>
+          </div>
+
+          <!-- Physiological Sigh -->
+          <div class="exercise-content" id="exercise-sigh" style="display:none;">
+            <div class="sigh-container">
+              <div class="sigh-visual" id="sigh-visual">
+                <div class="sigh-lung" id="sigh-lung"></div>
+                <div class="sigh-air-particles" id="sigh-air-particles">
+                  <span class="air-particle" style="--i:0"></span>
+                  <span class="air-particle" style="--i:1"></span>
+                  <span class="air-particle" style="--i:2"></span>
+                  <span class="air-particle" style="--i:3"></span>
+                  <span class="air-particle" style="--i:4"></span>
+                </div>
+              </div>
+              <div class="sigh-info">
+                <p class="sigh-phase-text" id="sigh-text">Bereit?</p>
+                <p class="sigh-timer-text" id="sigh-timer"></p>
+              </div>
+              <div class="sigh-progress" id="sigh-progress">
+                <span class="sigh-dot" data-step="0"></span>
+                <span class="sigh-dot" data-step="1"></span>
+                <span class="sigh-dot" data-step="2"></span>
+                <span class="sigh-dot" data-step="3"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5-4-3-2-1 -->
+          <div class="exercise-content" id="exercise-grounding" style="display:none;">
+            <div class="grounding-container">
+              <div class="grounding-step-dots" id="grounding-step-dots">
+                <span class="grounding-step-dot active" data-step="0"></span>
+                <span class="grounding-step-dot" data-step="1"></span>
+                <span class="grounding-step-dot" data-step="2"></span>
+                <span class="grounding-step-dot" data-step="3"></span>
+                <span class="grounding-step-dot" data-step="4"></span>
+              </div>
+              <div class="grounding-step-text" id="grounding-text">
+                Nenne 5 Dinge, die du SEHEN kannst
+              </div>
+              <div class="grounding-counter" id="grounding-counter">0 / 5</div>
+              <div class="grounding-inputs">
+                <input type="text" class="grounding-input" placeholder="Eingabe..." id="grounding-input-1">
+                <input type="text" class="grounding-input" placeholder="Eingabe..." id="grounding-input-2">
+                <input type="text" class="grounding-input" placeholder="Eingabe..." id="grounding-input-3">
+                <input type="text" class="grounding-input" placeholder="Eingabe..." id="grounding-input-4">
+                <input type="text" class="grounding-input" placeholder="Eingabe..." id="grounding-input-5">
+              </div>
+            </div>
+          </div>
+
+          <!-- PME -->
+          <div class="exercise-content" id="exercise-pme" style="display:none;">
+            <div class="pme-container">
+              <div class="pme-body">
+                <div class="pme-zone" data-zone="shoulders">
+                  <svg viewBox="0 0 100 120">
+                    <circle cx="50" cy="20" r="12" fill="none" stroke="var(--accent)" stroke-width="2"/>
+                    <line x1="50" y1="32" x2="50" y2="65" stroke="var(--accent)" stroke-width="2"/>
+                    <line x1="50" y1="45" x2="25" y2="60" stroke="var(--accent)" stroke-width="2"/>
+                    <line x1="50" y1="45" x2="75" y2="60" stroke="var(--accent)" stroke-width="2"/>
+                    <line x1="50" y1="65" x2="35" y2="95" stroke="var(--accent)" stroke-width="2"/>
+                    <line x1="50" y1="65" x2="65" y2="95" stroke="var(--accent)" stroke-width="2"/>
+                  </svg>
+                </div>
+                <p class="pme-step-text" id="pme-step-text">Schultern hochziehen</p>
+                <div class="pme-progress" id="pme-progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise-controls">
+          <button class="btn btn-primary" id="btn-complete-exercise">Fertig</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard View -->
+    <section class="view" id="view-dashboard">
+      <div class="glass-card dashboard-scroll">
+        <h1 class="view-title">Dashboard</h1>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">◫</div>
+            <div class="stat-value" id="stat-avg-stress">--</div>
+            <div class="stat-label">Ø Stress (7 Tage)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">◐</div>
+            <div class="stat-value" id="stat-interventions">--</div>
+            <div class="stat-label">Übungen diese Woche</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">◴</div>
+            <div class="stat-value" id="stat-focus-min">--</div>
+            <div class="stat-label">Fokus-Minuten (Woche)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">◍</div>
+            <div class="stat-value" id="stat-consecutive">--</div>
+            <div class="stat-label">Tage in Folge</div>
+          </div>
+        </div>
+
+        <div class="stats-detail">
+          <div class="detail-row">
+            <span>Gesamt-Checks:</span>
+            <strong id="stat-total-checks">--</strong>
+          </div>
+          <div class="detail-row">
+            <span>Gesamt-Übungen:</span>
+            <strong id="stat-total-interventions">--</strong>
+          </div>
+          <div class="detail-row">
+            <span>Gesamt-Fokus:</span>
+            <strong id="stat-total-focus">--</strong>
+          </div>
+        </div>
+
+        <div class="stress-chart">
+          <h3>Stress-Verlauf (7 Tage)</h3>
+          <div class="chart-bars" id="chart-bars"></div>
+        </div>
+
+        <div class="stress-levels">
+          <h3>Stress-Verteilung (30 Tage)</h3>
+          <div class="level-bars">
+            <div class="level-bar">
+              <span>Niedrig</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-low" id="bar-low" style="width:0%"></div>
+              </div>
+              <span id="bar-low-count">0</span>
+            </div>
+            <div class="level-bar">
+              <span>Mittel</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-medium" id="bar-medium" style="width:0%"></div>
+              </div>
+              <span id="bar-medium-count">0</span>
+            </div>
+            <div class="level-bar">
+              <span>Hoch</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-high" id="bar-high" style="width:0%"></div>
+              </div>
+              <span id="bar-high-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="export-buttons">
+          <button class="btn btn-secondary" id="btn-export-html">Als HTML exportieren</button>
+          <button class="btn btn-secondary" id="btn-export-csv">Als CSV exportieren</button>
+        </div>
+
+        <button class="btn btn-primary" id="btn-back-to-stress">Zurück</button>
+        <button class="btn btn-danger" id="btn-clear-history">Verlauf löschen</button>
+      </div>
+    </section>
+
+    <!-- Settings View -->
+    <section class="view" id="view-settings">
+      <div class="glass-card">
+        <h1 class="view-title">Einstellungen</h1>
+
+        <div class="settings-group">
+          <label class="setting-label">
+            <span>Erinnerungs-Intervall</span>
+            <select id="setting-interval">
+              <option value="30">30 Minuten</option>
+              <option value="60">60 Minuten</option>
+              <option value="90">90 Minuten</option>
+              <option value="120">120 Minuten</option>
+              <option value="180" selected>180 Minuten (3 Std.)</option>
+            </select>
+          </label>
+
+          <label class="setting-label">
+            <span>Töne</span>
+            <input type="checkbox" id="setting-sound" checked>
+          </label>
+
+ 
+          <label class="setting-label">
+            <span>Hintergrundgeräusch</span>
+            <select id="setting-ambient">
+              <option value="none">Keines (Stumm)</option>
+              <option value="rain">🌧️ Regen</option>
+              <option value="forest">🌲 Wald</option>
+            </select>
+          </label>
+
+          <label class="setting-label">
+            <span>Lautstärke</span>
+            <input type="range" id="setting-ambient-volume" min="0" max="100" value="30" style="width: 120px;">
+          </label>
+        </div>
+
+        <button class="btn btn-primary" id="btn-save-settings">Speichern</button>
+        <button class="btn btn-ghost" id="btn-back-from-settings">Zurück</button>
+      </div>
+    </section>
+
+    <!-- Custom Box Timers View -->
+    <section class="view" id="view-box-timers">
+      <div class="glass-card centered">
+        <h1 class="view-title">Box-Breathing Timer</h1>
+        <p class="view-subtitle">Passe die Dauer jeder Phase an (Sekunden)</p>
+
+        <div class="box-timers-form">
+          <div class="timer-input-group">
+            <label for="timer-inhale">Einatmen</label>
+            <input type="number" id="timer-inhale" min="1" max="20" value="4">
+          </div>
+          <div class="timer-input-group">
+            <label for="timer-hold">Halten (eingeatmet)</label>
+            <input type="number" id="timer-hold" min="1" max="20" value="4">
+          </div>
+          <div class="timer-input-group">
+            <label for="timer-exhale">Ausatmen</label>
+            <input type="number" id="timer-exhale" min="1" max="20" value="4">
+          </div>
+          <div class="timer-input-group">
+            <label for="timer-hold-empty">Halten (ausgeatmet)</label>
+            <input type="number" id="timer-hold-empty" min="1" max="20" value="4">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-save-box-timers">Speichern</button>
+        <button class="btn btn-ghost" id="btn-back-from-box-timers">Zurück</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="../modules/audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
