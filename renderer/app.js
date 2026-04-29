@@ -377,6 +377,12 @@ const stressRingProgress = document.getElementById('stress-ring-progress');
 const ambientOrb = document.getElementById('ambient-orb');
 const exercisePhaseChip = document.getElementById('exercise-phase-chip');
 const exercisePhaseTime = document.getElementById('exercise-phase-time');
+const launchOnStartupRow = document.getElementById('setting-launch-on-startup-row');
+
+const isWindows = navigator.userAgent && navigator.userAgent.includes('Windows');
+if (!isWindows && launchOnStartupRow) {
+  launchOnStartupRow.style.display = 'none';
+}
 
 const stressLabels = {
   1: 'Sehr niedrig',
@@ -1324,10 +1330,17 @@ document.getElementById('btn-open-settings').addEventListener('click', () => {
 document.getElementById('btn-save-settings').addEventListener('click', () => {
   const interval = parseInt(document.getElementById('setting-interval').value);
   const sound = document.getElementById('setting-sound').checked;
+  const launchOnStartup = document.getElementById('setting-launch-on-startup').checked;
   const ambientSound = ambientSoundType;
   const ambientVolumeVal = ambientVolume;
 
-  window.electronAPI.updateSettings({ intervalMinutes: interval, soundEnabled: sound, ambientSound, ambientVolume: ambientVolumeVal }).then(() => {
+  window.electronAPI.updateSettings({
+    intervalMinutes: interval,
+    soundEnabled: sound,
+    launchOnStartup,
+    ambientSound,
+    ambientVolume: ambientVolumeVal,
+  }).then(() => {
     window.audioEngine.setEnabled(sound);
     window.audioEngine.setAmbientVolume(ambientVolumeVal);
     showView('stress');
@@ -1371,6 +1384,7 @@ function applySettingsToUI(settings, applyPreset) {
     document.getElementById('setting-sound').checked = true;
     window.audioEngine.setEnabled(true);
   }
+  document.getElementById('setting-launch-on-startup').checked = Boolean(settings.launchOnStartup);
 
   ambientVolume = settings.ambientVolume !== undefined ? settings.ambientVolume : 0.3;
   ambientSoundType = settings.ambientSound || null;

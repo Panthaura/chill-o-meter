@@ -4,15 +4,12 @@ const links = {
   github: 'https://github.com/Panthaura/chill-o-meter',
 };
 
-document.querySelectorAll('[data-link]').forEach((btn) => {
-  btn.addEventListener('click', (event) => {
-    const key = btn.getAttribute('data-link');
-    const target = links[key];
-    if (!target || target === '#') {
-      event.preventDefault();
-      alert('Link wird spaeter hinterlegt.');
-      return;
-    }
-    btn.setAttribute('href', target);
-  });
+document.querySelectorAll('[data-link]').forEach((linkEl) => {
+  const key = linkEl.getAttribute('data-link');
+  const target = links[key];
+  if (!target || target === '#') return;
+  linkEl.setAttribute('href', target);
+  if (key !== 'github') {
+    linkEl.setAttribute('download', '');
+  }
 });

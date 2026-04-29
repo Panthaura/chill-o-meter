@@ -11,6 +11,7 @@ const defaults = {
   settings: {
     intervalMinutes: 180,
     soundEnabled: true,
+    launchOnStartup: false,
   },
   achievements: {
     totalChecks: 0,

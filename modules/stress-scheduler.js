@@ -97,12 +97,36 @@ function setupIpc(scheduler) {
   });
 
   ipcMain.handle('settings:get', () => {
-    return storage.get('settings') || {};
+    const settings = storage.get('settings') || {};
+    if (process.platform === 'win32') {
+      try {
+        const loginState = app.getLoginItemSettings();
+        settings.launchOnStartup = Boolean(loginState.openAtLogin);
+      } catch (e) {
+        settings.launchOnStartup = Boolean(settings.launchOnStartup);
+      }
+    }
+    return settings;
   });
 
   ipcMain.handle('settings:update', (_event, settings) => {
+    if (Object.prototype.hasOwnProperty.call(settings, 'launchOnStartup') && process.platform === 'win32') {
+      try {
+        app.setLoginItemSettings({ openAtLogin: Boolean(settings.launchOnStartup) });
+      } catch (e) {
+        // Keep app functional even if OS denies startup registration.
+      }
+    }
     storage.merge('settings', settings);
     const updated = storage.get('settings') || {};
+    if (process.platform === 'win32') {
+      try {
+        const loginState = app.getLoginItemSettings();
+        updated.launchOnStartup = Boolean(loginState.openAtLogin);
+      } catch (e) {
+        updated.launchOnStartup = Boolean(updated.launchOnStartup);
+      }
+    }
     if (settings.intervalMinutes) {
       if (Number.isInteger(settings.intervalMinutes) && settings.intervalMinutes > 0) {
         scheduler.setIntervalMinutes(settings.intervalMinutes);
