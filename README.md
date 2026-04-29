@@ -16,10 +16,10 @@ Offline Desktop App fuer Stress-Checks, gefuehrte Uebungen und Fokus-Sessions.
 
 ## Download
 
-Release: [v0.0.1](https://github.com/Panthaura/chill-o-meter/releases/tag/v0.0.1)
+Release: [v0.0.2](https://github.com/Panthaura/chill-o-meter/releases/tag/v0.0.2)
 
-- Windows Setup: [Chill-O-Meter.Setup.0.0.1.exe](https://github.com/Panthaura/chill-o-meter/releases/download/v0.0.1/Chill-O-Meter.Setup.0.0.1.exe)
-- Windows Portable: [Chill-O-Meter.0.0.1.exe](https://github.com/Panthaura/chill-o-meter/releases/download/v0.0.1/Chill-O-Meter.0.0.1.exe)
+- Windows Setup: [Chill-O-Meter Setup 0.0.2.exe](https://github.com/Panthaura/chill-o-meter/releases/download/v0.0.2/Chill-O-Meter%20Setup%200.0.2.exe)
+- Windows Portable: [Chill-O-Meter 0.0.2.exe](https://github.com/Panthaura/chill-o-meter/releases/download/v0.0.2/Chill-O-Meter%200.0.2.exe)
 - GitHub Repository: [Panthaura/chill-o-meter](https://github.com/Panthaura/chill-o-meter)
 
 ## Tech Stack
