@@ -51,6 +51,10 @@ Beim ersten Start wird eine Zustimmung abgefragt.
 
 Aktiv in Entwicklung.
 
+## Versionen
+- 0.0.2 – kleinere Bugfixes und Verbesserungen (lokale Entwicklung)
+- 0.0.1 – erstes veroeffentlichtes Release (siehe Downloads oben)
+
 ## Lizenz
 
 MIT
